@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  mysqldb:
+    image: mysql:8.0
+    container_name: aurelia_mysql_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: aurelia_jewellery_db
+      MYSQL_ROOT_PASSWORD: root_password_123
+      MYSQL_USER: aurelia_user
+      MYSQL_PASSWORD: aurelia_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aurelia_spring_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/aurelia_jewellery_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: aurelia_user
+      SPRING_DATASOURCE_PASSWORD: aurelia_password
+      JWT_SECRET: aurelia_super_secret_jwt_key_signature_2026_luxury_jewellery_ecommerce
+      RAZORPAY_KEY_ID: rzp_test_aurelia_key
+      RAZORPAY_KEY_SECRET: aurelia_secret_key
+    depends_on:
+      - mysqldb
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aurelia_react_frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
